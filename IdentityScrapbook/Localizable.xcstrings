@@ -1,0 +1,486 @@
+{
+  "sourceLanguage": "ja",
+  "strings": {
+    "identity.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なりたい自分"
+          }
+        }
+      }
+    },
+    "identity.empty.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なりたい自分を見つけよう"
+          }
+        }
+      }
+    },
+    "identity.empty.description": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なりたい自分と、その自分に近づく小さな行動を決めましょう。"
+          }
+        }
+      }
+    },
+    "identity.create": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自分を追加"
+          }
+        }
+      }
+    },
+    "identity.name": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "なりたい自分"
+          }
+        }
+      }
+    },
+    "identity.name.example": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例：本を読む自分"
+          }
+        }
+      }
+    },
+    "action.minimum": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ミニマムの行動"
+          }
+        }
+      }
+    },
+    "action.normal": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いつもの行動"
+          }
+        }
+      }
+    },
+    "action.minimum.example": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例：本を1ページ読む"
+          }
+        }
+      }
+    },
+    "action.normal.example": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "例：本を20分読む"
+          }
+        }
+      }
+    },
+    "action.minimum.help": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "忙しい日にもできる、小さな行動。"
+          }
+        }
+      }
+    },
+    "action.normal.help": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "いつもの日に取り組みたい行動。"
+          }
+        }
+      }
+    },
+    "scrapbook.ready": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクラップブックを作成しました"
+          }
+        }
+      }
+    },
+    "scrapbook.automatic": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この自分のスクラップブックも一緒に作成します。"
+          }
+        }
+      }
+    },
+    "common.cancel": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャンセル"
+          }
+        }
+      }
+    },
+    "common.save": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存"
+          }
+        }
+      }
+    },
+    "common.ok": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "common.retry": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "再試行"
+          }
+        }
+      }
+    },
+    "draft.discard.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力した内容を破棄しますか？"
+          }
+        }
+      }
+    },
+    "draft.discard": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "破棄する"
+          }
+        }
+      }
+    },
+    "draft.keep": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力を続ける"
+          }
+        }
+      }
+    },
+    "save.error.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存できませんでした"
+          }
+        }
+      }
+    },
+    "save.error.description": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入力内容はそのまま残っています。もう一度保存してください。"
+          }
+        }
+      }
+    },
+    "storage.error.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "データを開けませんでした"
+          }
+        }
+      }
+    },
+    "storage.error.description": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存済みのデータを開けませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "common.close": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        }
+      }
+    },
+    "vote.choose": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "できた行動を選びましょう"
+          }
+        }
+      }
+    },
+    "vote.saved": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一票を投じました！"
+          }
+        }
+      }
+    },
+    "vote.done": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "完了"
+          }
+        }
+      }
+    },
+    "vote.undo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投票を取り消す"
+          }
+        }
+      }
+    },
+    "vote.error.title": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "保存できませんでした"
+          }
+        }
+      }
+    },
+    "vote.error.save": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投票は保存されていません。もう一度、行動をタップしてください。"
+          }
+        }
+      }
+    },
+    "vote.error.undo": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投票を取り消せませんでした。もう一度お試しください。"
+          }
+        }
+      }
+    },
+    "vote.identity.hint": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "できた行動を選んで、この自分に一票を投じます。"
+          }
+        }
+      }
+    },
+    "vote.action.hint": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "この行動を記録して、一票を投じます。"
+          }
+        }
+      }
+    },
+    "tab.vote": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投票"
+          }
+        }
+      }
+    },
+    "tab.scrapbooks": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクラップブック"
+          }
+        }
+      }
+    },
+    "vote.saveMoment": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思い出を残す"
+          }
+        }
+      }
+    },
+    "book.emptyShelf": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "まだスクラップブックがありません"
+          }
+        }
+      }
+    },
+    "book.emptyShelf.help": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "投票タブで、なりたい自分を追加しましょう。"
+          }
+        }
+      }
+    },
+    "book.empty": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最初の思い出を残しましょう"
+          }
+        }
+      }
+    },
+    "book.empty.help": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "右下の＋から、今日のひとことを追加できます。"
+          }
+        }
+      }
+    },
+    "note.add": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ひとことを追加"
+          }
+        }
+      }
+    },
+    "note.body": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思い出の本文"
+          }
+        }
+      }
+    },
+    "note.readMore": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "タップして全文と日付を見る"
+          }
+        }
+      }
+    },
+    "note.added": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スクラップブックに追加しました"
+          }
+        }
+      }
+    },
+    "note.detail": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思い出"
+          }
+        }
+      }
+    },
+    "note.save": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "追加"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
