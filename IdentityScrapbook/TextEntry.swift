@@ -43,8 +43,17 @@ enum EntryStore {
         var photos = FetchDescriptor<PhotoEntry>(predicate: #Predicate { $0.scrapbookID == bookID },
                                                 sortBy: [SortDescriptor(\.sequence, order: .reverse)])
         photos.fetchLimit = 1
-        return max(try context.fetch(notes).first?.sequence ?? -1,
-                   try context.fetch(photos).first?.sequence ?? -1) + 1
+        var videos = FetchDescriptor<VideoEntry>(predicate: #Predicate { $0.scrapbookID == bookID },
+                                                sortBy: [SortDescriptor(\.sequence, order: .reverse)])
+        videos.fetchLimit = 1
+        var audio = FetchDescriptor<AudioEntry>(predicate: #Predicate { $0.scrapbookID == bookID },
+                                                sortBy: [SortDescriptor(\.sequence, order: .reverse)])
+        audio.fetchLimit = 1
+        let latest = [try context.fetch(notes).first?.sequence ?? -1,
+                      try context.fetch(photos).first?.sequence ?? -1,
+                      try context.fetch(videos).first?.sequence ?? -1,
+                      try context.fetch(audio).first?.sequence ?? -1]
+        return (latest.max() ?? -1) + 1
     }
 
     static func addText(_ body: String, bookID: UUID, voteID: UUID?, submissionID: UUID,

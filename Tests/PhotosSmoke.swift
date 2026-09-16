@@ -24,6 +24,13 @@ struct PhotosSmoke {
         precondition(notes.map(\.paperStyle) == [0, 1])
         precondition(photos[0].caption == "写真の思い出 🌱\n二行目")
         precondition(photos[0].linkedVoteID != nil && photos[1].linkedVoteID == nil)
+        precondition(!photos[0].isSticker && photos[1].isSticker)
+        let sticker = try Data(contentsOf: assets.appendingPathComponent(photos[1].stickerKey!))
+        precondition(sticker == fixture(transparent: true))
+        let stickerPreview = try Data(contentsOf: assets.appendingPathComponent(photos[1].thumbnailKey))
+        let source = CGImageSourceCreateWithData(stickerPreview as CFData, nil)!
+        let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as! [CFString: Any]
+        precondition(properties[kCGImagePropertyHasAlpha] as? Bool == true)
         for photo in photos {
             let original = try Data(contentsOf: assets.appendingPathComponent(photo.originalKey))
             precondition(original == bytes)
@@ -32,12 +39,12 @@ struct PhotosSmoke {
         }
         let votes = try context.fetch(FetchDescriptor<Vote>())
         precondition(votes.count == 1)
-        print("PASS: migration, original preservation, readable previews, captions, mixed ordering, stable note colors, vote links, deduplication, invalid image/write failure rejection, disk reopen")
+        print("PASS: transparent sticker persistence, original preservation, readable previews, captions, mixed ordering, stable note colors, vote links, deduplication, invalid image/write failure rejection, disk reopen")
     }
 
     @MainActor static func container(_ url: URL, legacy: Bool = false) throws -> ModelContainer {
         let schema = legacy ? Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self])
-            : Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self, PhotoEntry.self])
+            : Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self, PhotoEntry.self, VideoEntry.self, AudioEntry.self])
         return try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
     }
 
@@ -63,7 +70,7 @@ struct PhotosSmoke {
                                              voteID: vote.id, submissionID: submission, in: store, root: assets)
         }
         _ = try EntryStore.addText("next note", bookID: book, voteID: nil, submissionID: UUID(), in: store)
-        _ = try await PhotoStore.addPhoto(bytes, caption: "", bookID: book, voteID: nil, submissionID: UUID(), in: store, root: assets)
+        _ = try await PhotoStore.addPhoto(bytes, caption: "", bookID: book, voteID: nil, submissionID: UUID(), in: store, root: assets, sticker: fixture(transparent: true))
         do {
             _ = try await PhotoStore.addPhoto(Data("invalid".utf8), caption: "", bookID: book, voteID: nil,
                                              submissionID: UUID(), in: store, root: assets)
@@ -78,11 +85,12 @@ struct PhotosSmoke {
         } catch { }
     }
 
-    static func fixture() -> Data {
+    static func fixture(transparent: Bool = false) -> Data {
         let context = CGContext(data: nil, width: 32, height: 48, bitsPerComponent: 8, bytesPerRow: 0,
-                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)!
+                                space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
         context.setFillColor(CGColor(red: 0.2, green: 0.7, blue: 0.4, alpha: 1))
-        context.fill(CGRect(x: 0, y: 0, width: 32, height: 48))
+        context.clear(CGRect(x: 0, y: 0, width: 32, height: 48))
+        context.fill(transparent ? CGRect(x: 8, y: 8, width: 16, height: 32) : CGRect(x: 0, y: 0, width: 32, height: 48))
         let output = NSMutableData()
         let destination = CGImageDestinationCreateWithData(output, UTType.png.identifier as CFString, 1, nil)!
         CGImageDestinationAddImage(destination, context.makeImage()!, nil)

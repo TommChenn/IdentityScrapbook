@@ -6,18 +6,21 @@ struct BookRoute: Hashable {
     var voteID: UUID? = nil
 }
 
+private enum MemoryFormat { case text, photo, video, audio }
+
 private struct NoteDraft: Identifiable {
     let id = UUID()
     var voteID: UUID?
-    var isPhoto = false
+    var format: MemoryFormat = .text
 }
 
 private enum BookItem: Identifiable {
-    case text(TextEntry), photo(PhotoEntry)
-    var id: UUID { switch self { case .text(let e): e.id; case .photo(let e): e.id } }
-    var sequence: Int { switch self { case .text(let e): e.sequence; case .photo(let e): e.sequence } }
-    var date: Date { switch self { case .text(let e): e.addedAt; case .photo(let e): e.addedAt } }
-    var timeZone: String { switch self { case .text(let e): e.timeZoneID; case .photo(let e): e.timeZoneID } }
+    case text(TextEntry), photo(PhotoEntry), video(VideoEntry), audio(AudioEntry)
+    var id: UUID { switch self { case .text(let e): e.id; case .photo(let e): e.id; case .video(let e): e.id; case .audio(let e): e.id } }
+    var sequence: Int { switch self { case .text(let e): e.sequence; case .photo(let e): e.sequence; case .video(let e): e.sequence; case .audio(let e): e.sequence } }
+    var date: Date { switch self { case .text(let e): e.addedAt; case .photo(let e): e.addedAt; case .video(let e): e.addedAt; case .audio(let e): e.addedAt } }
+    var isSticker: Bool { if case .photo(let photo) = self { return photo.isSticker }; return false }
+    var timeZone: String { switch self { case .text(let e): e.timeZoneID; case .photo(let e): e.timeZoneID; case .video(let e): e.timeZoneID; case .audio(let e): e.timeZoneID } }
 }
 
 func paperColor(_ style: Int) -> Color {
@@ -36,43 +39,47 @@ struct ScrapbookShelfView: View {
                 ContentUnavailableView("book.emptyShelf", systemImage: "books.vertical",
                                        description: Text("book.emptyShelf.help"))
             } else {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: textSize.isAccessibilitySize ? 280 : 150))], spacing: 24) {
-                    ForEach(books) { book in
-                        NavigationLink(value: BookRoute(bookID: book.id)) {
-                            VStack(alignment: .leading, spacing: 24) {
-                                Image(systemName: "book.closed").font(.title)
-                                Text(book.identity?.name ?? "").font(.headline)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 28) {
+                    Text("shelf.introduction")
+                        .font(.subheadline).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                    LazyVGrid(columns: textSize.isAccessibilitySize
+                              ? [GridItem(.flexible())]
+                              : [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 32) {
+                        ForEach(books) { book in
+                            NavigationLink(value: BookRoute(bookID: book.id)) {
+                                ScrapbookCover(name: book.identity?.name ?? "", style: book.coverStyleID)
                             }
-                            .foregroundStyle(.black)
-                            .padding(24)
-                            .frame(minHeight: 180)
-                            .background(paperColor(book.coverStyleID == "peach" ? 1 : book.coverStyleID == "lavender" ? 2 : 0),
-                                        in: RoundedRectangle(cornerRadius: 8))
-                            .overlay(alignment: .leading) { Rectangle().fill(.black.opacity(0.1)).frame(width: 8) }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
-                }.padding(24)
+                }
+                .padding(24)
+                .frame(maxWidth: 680)
+                .frame(maxWidth: .infinity)
             }
         }
+        .background { ScrapbookPaper() }
         .navigationTitle("tab.scrapbooks")
     }
 }
 
 struct ScrapbookView: View {
     let route: BookRoute
+    @Environment(\.dynamicTypeSize) private var textSize
     @Query private var books: [Scrapbook]
     @Query private var entries: [TextEntry]
     @State private var draft: NoteDraft?
     @Query private var photos: [PhotoEntry]
+    @Query private var videos: [VideoEntry]
+    @Query private var audio: [AudioEntry]
     @State private var detail: BookItem?
     @State private var choosingFormat = false
     @State private var pendingVoteID: UUID?
     @State private var reopenChooser = false
 
     private var items: [BookItem] {
-        (entries.map(BookItem.text) + photos.map(BookItem.photo)).sorted { $0.sequence < $1.sequence }
+        (entries.map(BookItem.text) + photos.map(BookItem.photo) + videos.map(BookItem.video) + audio.map(BookItem.audio)).sorted { $0.sequence < $1.sequence }
     }
     @State private var handledInitialRoute = false
     @State private var addedID: UUID?
@@ -84,12 +91,14 @@ struct ScrapbookView: View {
         _books = Query(filter: #Predicate<Scrapbook> { $0.id == id })
         _entries = Query(filter: #Predicate<TextEntry> { $0.scrapbookID == id }, sort: \TextEntry.sequence)
         _photos = Query(filter: #Predicate<PhotoEntry> { $0.scrapbookID == id }, sort: \PhotoEntry.sequence)
+        _videos = Query(filter: #Predicate<VideoEntry> { $0.scrapbookID == id }, sort: \VideoEntry.sequence)
+        _audio = Query(filter: #Predicate<AudioEntry> { $0.scrapbookID == id }, sort: \AudioEntry.sequence)
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 28) {
+                LazyVStack(spacing: 36) {
                     if items.isEmpty {
                         ContentUnavailableView("book.empty", systemImage: "note.text",
                                                description: Text("book.empty.help"))
@@ -99,40 +108,62 @@ struct ScrapbookView: View {
                             Group {
                                 switch entry {
                                 case .text(let note):
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        Text(note.body).lineLimit(8).multilineTextAlignment(.leading)
-                                        Text("note.readMore").font(.caption)
+                                    MemoryPaper(color: paperColor(note.paperStyle)) {
+                                        VStack(alignment: .leading, spacing: 18) {
+                                            Text(note.body).font(.body).lineSpacing(5)
+                                                .lineLimit(textSize.isAccessibilitySize ? 5 : 8)
+                                                .multilineTextAlignment(.leading)
+                                            HStack(alignment: .firstTextBaseline) {
+                                                Image(systemName: "text.alignleft")
+                                                Text("note.readMore")
+                                            }
+                                            .font(.caption).foregroundStyle(ScrapbookStyle.ink.opacity(0.75))
+                                        }
                                     }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(24)
-                                    .foregroundStyle(.black)
-                                    .background(paperColor(note.paperStyle))
+                                case .audio(let audio):
+                                    AudioCard(entry: audio)
+                                case .video(let video):
+                                    VideoThumbnail(entry: video).padding(10).background(.white)
                                 case .photo(let photo):
                                     VStack(alignment: .leading, spacing: 12) {
-                                        SavedPhoto(entry: photo).padding(10).background(.white)
+                                        if photo.isSticker {
+                                            SavedPhoto(entry: photo)
+                                                .shadow(color: .black.opacity(0.12), radius: 2, x: 1, y: 2)
+                                        } else {
+                                            SavedPhoto(entry: photo).padding(10).padding(.bottom, 14)
+                                                .background(.white, in: RoundedRectangle(cornerRadius: 2))
+                                                .shadow(color: .black.opacity(0.12), radius: 4, x: 1, y: 4)
+                                        }
                                         if !photo.caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                                             Label {
                                                 Text(photo.caption).lineLimit(4).multilineTextAlignment(.leading)
                                             } icon: { Image(systemName: "arrow.turn.left.up") }
-                                            .padding(.horizontal, 8)
+                                            .font(.callout).lineSpacing(3)
+                                            .padding(14)
+                                            .foregroundStyle(ScrapbookStyle.ink)
+                                            .background(ScrapbookStyle.paper, in: RoundedRectangle(cornerRadius: 3))
                                         }
                                     }
                                 }
                             }
                             .overlay(alignment: .top) {
-                                Rectangle().fill(.brown.opacity(0.25)).frame(width: 64, height: 18).offset(y: -9)
+                                if !entry.isSticker {
+                                    ScrapbookTape(angle: entry.sequence % 2 == 0 ? -5 : 4).offset(y: -11)
+                                }
                             }
                         }
                         .buttonStyle(.plain)
-                        .padding(.leading, entry.sequence % 2 == 0 ? 0 : 16)
-                        .padding(.trailing, entry.sequence % 2 == 0 ? 16 : 0)
+                        .padding(.leading, textSize.isAccessibilitySize ? 0 : (entry.sequence % 2 == 0 ? 0 : 28))
+                        .padding(.trailing, textSize.isAccessibilitySize ? 0 : (entry.sequence % 2 == 0 ? 28 : 0))
                         .id(entry.id)
                     }
                 }
-                .padding(24)
-                .padding(.bottom, 90)
+                .padding(.horizontal, 24).padding(.top, 32)
+                .padding(.bottom, 100)
+                .frame(maxWidth: 620)
+                .frame(maxWidth: .infinity)
             }
-            .background(Color(.systemGroupedBackground))
+            .background { ScrapbookPaper() }
             .onChange(of: items.count) { _, _ in
                 if let addedID { proxy.scrollTo(addedID, anchor: .bottom) }
             }
@@ -145,9 +176,14 @@ struct ScrapbookView: View {
         .toolbar(.hidden, for: .tabBar)
         .overlay(alignment: .bottomTrailing) {
             Button { pendingVoteID = nil; choosingFormat.toggle() } label: {
-                Image(systemName: "plus").font(.title2.bold()).padding(20)
+                Image(systemName: "plus").font(.title2.bold())
+                    .frame(width: 60, height: 60)
+                    .foregroundStyle(.white)
+                    .background(ScrapbookStyle.accent, in: Circle())
+                    .overlay(Circle().strokeBorder(.white.opacity(0.5), lineWidth: 2))
+                    .shadow(color: .black.opacity(0.18), radius: 6, y: 3)
             }
-            .buttonStyle(.borderedProminent).clipShape(Circle()).padding(20)
+            .buttonStyle(.plain).padding(20)
             .accessibilityLabel(Text("memory.add"))
             .disabled(books.isEmpty)
         }
@@ -171,8 +207,10 @@ struct ScrapbookView: View {
                     Color.black.opacity(0.05).ignoresSafeArea()
                         .onTapGesture { choosingFormat = false; pendingVoteID = nil }
                     VStack(alignment: .leading, spacing: 8) {
-                        Button { choose(photo: true) } label: { Label("photo.add", systemImage: "photo") }
-                        Button { choose(photo: false) } label: { Label("note.add", systemImage: "note.text") }
+                        Button { choose(.photo) } label: { Label("photo.add", systemImage: "photo") }
+                        Button { choose(.text) } label: { Label("note.add", systemImage: "note.text") }
+                        Button { choose(.video) } label: { Label("video.add", systemImage: "video") }
+                        Button { choose(.audio) } label: { Label("audio.add", systemImage: "mic") }
                         Button("common.cancel") { choosingFormat = false; pendingVoteID = nil }
                     }
                     .buttonStyle(.bordered).controlSize(.large)
@@ -184,7 +222,16 @@ struct ScrapbookView: View {
         .fullScreenCover(item: $draft, onDismiss: {
             if reopenChooser { reopenChooser = false; choosingFormat = true }
         }) { draft in
-            if draft.isPhoto {
+            if draft.format == .audio {
+                AudioEditor(bookID: route.bookID, voteID: draft.voteID, submissionID: draft.id) { addedID = $0 }
+            } else if draft.format == .video {
+                VideoEditor(bookID: route.bookID, voteID: draft.voteID, submissionID: draft.id) {
+                    addedID = $0
+                } onPickerCancelled: {
+                    pendingVoteID = draft.voteID
+                    reopenChooser = true
+                }
+            } else if draft.format == .photo {
                 PhotoEditor(bookID: route.bookID, voteID: draft.voteID, submissionID: draft.id) {
                     addedID = $0
                 } onPickerCancelled: {
@@ -207,6 +254,10 @@ struct ScrapbookView: View {
                         switch entry {
                         case .text(let note):
                             Text(note.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                        case .audio(let audio):
+                            AudioDetail(entry: audio)
+                        case .video(let video):
+                            VideoDetail(entry: video)
                         case .photo(let photo):
                             SavedPhoto(entry: photo)
                             Text(photo.caption).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
@@ -221,11 +272,11 @@ struct ScrapbookView: View {
         }
     }
 
-    private func choose(photo: Bool) {
+    private func choose(_ format: MemoryFormat) {
         let voteID = pendingVoteID
         pendingVoteID = nil
         choosingFormat = false
-        draft = NoteDraft(voteID: voteID, isPhoto: photo)
+        draft = NoteDraft(voteID: voteID, format: format)
     }
 
 }
