@@ -25,7 +25,7 @@ struct EntriesSmoke {
 
     @MainActor static func container(_ url: URL, legacy: Bool = false) throws -> ModelContainer {
         let schema = legacy ? Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self])
-            : Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self])
+            : Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self, PhotoEntry.self])
         return try ModelContainer(for: schema, configurations: [ModelConfiguration(schema: schema, url: url, cloudKitDatabase: .none)])
     }
 

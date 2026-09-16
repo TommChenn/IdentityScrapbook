@@ -34,7 +34,18 @@ final class TextEntry {
 
 @MainActor
 enum EntryStore {
-    enum SaveError: Error { case blank, missingBook, invalidVote, conflictingSubmission }
+    enum SaveError: Error { case blank, missingBook, invalidVote, conflictingSubmission, missingAsset }
+
+    static func nextSequence(bookID: UUID, context: ModelContext) throws -> Int {
+        var notes = FetchDescriptor<TextEntry>(predicate: #Predicate { $0.scrapbookID == bookID },
+                                               sortBy: [SortDescriptor(\.sequence, order: .reverse)])
+        notes.fetchLimit = 1
+        var photos = FetchDescriptor<PhotoEntry>(predicate: #Predicate { $0.scrapbookID == bookID },
+                                                sortBy: [SortDescriptor(\.sequence, order: .reverse)])
+        photos.fetchLimit = 1
+        return max(try context.fetch(notes).first?.sequence ?? -1,
+                   try context.fetch(photos).first?.sequence ?? -1) + 1
+    }
 
     static func addText(_ body: String, bookID: UUID, voteID: UUID?, submissionID: UUID,
                         in container: ModelContainer, now: Date = Date(),
@@ -63,7 +74,7 @@ enum EntryStore {
         latest.fetchLimit = 1
         let previous = try context.fetch(latest).first
         let entry = TextEntry(id: submissionID, bookID: bookID, voteID: voteID, body: body,
-                              sequence: (previous?.sequence ?? -1) + 1,
+                              sequence: try nextSequence(bookID: bookID, context: context),
                               paperStyle: ((previous?.paperStyle ?? -1) + 1) % 3,
                               now: now, timeZone: timeZone)
         context.insert(entry)

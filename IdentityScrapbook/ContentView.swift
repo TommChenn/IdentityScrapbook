@@ -90,7 +90,7 @@ struct ContentView: View {
             NavigationStack(path: $bookPath) {
                 ScrapbookShelfView()
                     .navigationDestination(for: BookRoute.self) { route in
-                        ScrapbookView(route: route)
+                        ScrapbookView(route: route).id(route)
                     }
             }
             .tabItem { Label("tab.scrapbooks", systemImage: "books.vertical") }.tag(1)

@@ -9,6 +9,15 @@ struct BookRoute: Hashable {
 private struct NoteDraft: Identifiable {
     let id = UUID()
     var voteID: UUID?
+    var isPhoto = false
+}
+
+private enum BookItem: Identifiable {
+    case text(TextEntry), photo(PhotoEntry)
+    var id: UUID { switch self { case .text(let e): e.id; case .photo(let e): e.id } }
+    var sequence: Int { switch self { case .text(let e): e.sequence; case .photo(let e): e.sequence } }
+    var date: Date { switch self { case .text(let e): e.addedAt; case .photo(let e): e.addedAt } }
+    var timeZone: String { switch self { case .text(let e): e.timeZoneID; case .photo(let e): e.timeZoneID } }
 }
 
 func paperColor(_ style: Int) -> Color {
@@ -56,7 +65,15 @@ struct ScrapbookView: View {
     @Query private var books: [Scrapbook]
     @Query private var entries: [TextEntry]
     @State private var draft: NoteDraft?
-    @State private var detail: TextEntry?
+    @Query private var photos: [PhotoEntry]
+    @State private var detail: BookItem?
+    @State private var choosingFormat = false
+    @State private var pendingVoteID: UUID?
+    @State private var reopenChooser = false
+
+    private var items: [BookItem] {
+        (entries.map(BookItem.text) + photos.map(BookItem.photo)).sorted { $0.sequence < $1.sequence }
+    }
     @State private var handledInitialRoute = false
     @State private var addedID: UUID?
     @State private var showAdded = false
@@ -66,26 +83,42 @@ struct ScrapbookView: View {
         let id = route.bookID
         _books = Query(filter: #Predicate<Scrapbook> { $0.id == id })
         _entries = Query(filter: #Predicate<TextEntry> { $0.scrapbookID == id }, sort: \TextEntry.sequence)
+        _photos = Query(filter: #Predicate<PhotoEntry> { $0.scrapbookID == id }, sort: \PhotoEntry.sequence)
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(spacing: 28) {
-                    if entries.isEmpty {
+                    if items.isEmpty {
                         ContentUnavailableView("book.empty", systemImage: "note.text",
                                                description: Text("book.empty.help"))
                     }
-                    ForEach(entries) { entry in
+                    ForEach(items) { entry in
                         Button { detail = entry } label: {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(entry.body).lineLimit(8).multilineTextAlignment(.leading)
-                                Text("note.readMore").font(.caption)
+                            Group {
+                                switch entry {
+                                case .text(let note):
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        Text(note.body).lineLimit(8).multilineTextAlignment(.leading)
+                                        Text("note.readMore").font(.caption)
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(24)
+                                    .foregroundStyle(.black)
+                                    .background(paperColor(note.paperStyle))
+                                case .photo(let photo):
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        SavedPhoto(entry: photo).padding(10).background(.white)
+                                        if !photo.caption.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            Label {
+                                                Text(photo.caption).lineLimit(4).multilineTextAlignment(.leading)
+                                            } icon: { Image(systemName: "arrow.turn.left.up") }
+                                            .padding(.horizontal, 8)
+                                        }
+                                    }
+                                }
                             }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(24)
-                            .foregroundStyle(.black)
-                            .background(paperColor(entry.paperStyle))
                             .overlay(alignment: .top) {
                                 Rectangle().fill(.brown.opacity(0.25)).frame(width: 64, height: 18).offset(y: -9)
                             }
@@ -100,7 +133,7 @@ struct ScrapbookView: View {
                 .padding(.bottom, 90)
             }
             .background(Color(.systemGroupedBackground))
-            .onChange(of: entries.count) { _, _ in
+            .onChange(of: items.count) { _, _ in
                 if let addedID { proxy.scrollTo(addedID, anchor: .bottom) }
             }
             .onChange(of: addedID) { _, id in
@@ -111,11 +144,11 @@ struct ScrapbookView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.hidden, for: .tabBar)
         .overlay(alignment: .bottomTrailing) {
-            Button { draft = NoteDraft() } label: {
+            Button { pendingVoteID = nil; choosingFormat.toggle() } label: {
                 Image(systemName: "plus").font(.title2.bold()).padding(20)
             }
             .buttonStyle(.borderedProminent).clipShape(Circle()).padding(20)
-            .accessibilityLabel(Text("note.add"))
+            .accessibilityLabel(Text("memory.add"))
             .disabled(books.isEmpty)
         }
         .overlay(alignment: .top) {
@@ -130,21 +163,54 @@ struct ScrapbookView: View {
         .task {
             guard !handledInitialRoute else { return }
             handledInitialRoute = true
-            if let voteID = route.voteID { draft = NoteDraft(voteID: voteID) }
+            if let voteID = route.voteID { pendingVoteID = voteID; choosingFormat = true }
         }
-        .fullScreenCover(item: $draft) { draft in
-            TextEntryEditor(bookID: route.bookID, voteID: draft.voteID,
-                            submissionID: draft.id, style: ((entries.last?.paperStyle ?? -1) + 1) % 3) {
-                addedID = $0
+        .overlay(alignment: .bottomTrailing) {
+            if choosingFormat {
+                ZStack(alignment: .bottomTrailing) {
+                    Color.black.opacity(0.05).ignoresSafeArea()
+                        .onTapGesture { choosingFormat = false; pendingVoteID = nil }
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button { choose(photo: true) } label: { Label("photo.add", systemImage: "photo") }
+                        Button { choose(photo: false) } label: { Label("note.add", systemImage: "note.text") }
+                        Button("common.cancel") { choosingFormat = false; pendingVoteID = nil }
+                    }
+                    .buttonStyle(.bordered).controlSize(.large)
+                    .padding().background(.regularMaterial, in: RoundedRectangle(cornerRadius: 20))
+                    .padding(.trailing, 20).padding(.bottom, 100)
+                }
+            }
+        }
+        .fullScreenCover(item: $draft, onDismiss: {
+            if reopenChooser { reopenChooser = false; choosingFormat = true }
+        }) { draft in
+            if draft.isPhoto {
+                PhotoEditor(bookID: route.bookID, voteID: draft.voteID, submissionID: draft.id) {
+                    addedID = $0
+                } onPickerCancelled: {
+                    pendingVoteID = draft.voteID
+                    reopenChooser = true
+                }
+            } else {
+                TextEntryEditor(bookID: route.bookID, voteID: draft.voteID,
+                                submissionID: draft.id, style: ((entries.last?.paperStyle ?? -1) + 1) % 3) {
+                    addedID = $0
+                }
             }
         }
         .sheet(item: $detail) { entry in
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        Text(entry.addedAt.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: TimeZone(identifier: entry.timeZoneID) ?? .gmt)))
+                        Text(entry.date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted, timeZone: TimeZone(identifier: entry.timeZone) ?? .gmt)))
                             .font(.subheadline).foregroundStyle(.secondary)
-                        Text(entry.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                        switch entry {
+                        case .text(let note):
+                            Text(note.body).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                        case .photo(let photo):
+                            SavedPhoto(entry: photo)
+                            Text(photo.caption).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                        }
                     }.padding(24)
                 }
                 .navigationTitle("note.detail")
@@ -154,6 +220,14 @@ struct ScrapbookView: View {
             .presentationDetents([.medium, .large])
         }
     }
+
+    private func choose(photo: Bool) {
+        let voteID = pendingVoteID
+        pendingVoteID = nil
+        choosingFormat = false
+        draft = NoteDraft(voteID: voteID, isPhoto: photo)
+    }
+
 }
 
 struct TextEntryEditor: View {

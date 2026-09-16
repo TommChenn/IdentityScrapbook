@@ -416,7 +416,7 @@
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "右下の＋から、今日のひとことを追加できます。"
+            "value": "右下の＋から、写真や今日のひとことを追加できます。"
           }
         }
       }
@@ -477,6 +477,106 @@
           "stringUnit": {
             "state": "translated",
             "value": "追加"
+          }
+        }
+      }
+    },
+    "memory.add": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "思い出を追加"
+          }
+        }
+      }
+    },
+    "photo.add": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を追加"
+          }
+        }
+      }
+    },
+    "photo.choose": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を選ぶ"
+          }
+        }
+      }
+    },
+    "photo.preview": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真のプレビュー"
+          }
+        }
+      }
+    },
+    "photo.caption": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "キャプション（任意）"
+          }
+        }
+      }
+    },
+    "photo.loading": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を読み込み中…"
+          }
+        }
+      }
+    },
+    "photo.saving": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を保存中…"
+          }
+        }
+      }
+    },
+    "photo.error": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を追加できませんでした"
+          }
+        }
+      }
+    },
+    "photo.loadError": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を読み込めませんでした。通信状況を確認して、もう一度写真を選んでください。"
+          }
+        }
+      }
+    },
+    "photo.missing": {
+      "localizations": {
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "写真を読み込めませんでした"
           }
         }
       }

@@ -54,7 +54,7 @@ final class Scrapbook {
 
 enum IdentityStore {
     static func makeContainer(inMemory: Bool = false) throws -> ModelContainer {
-        let schema = Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self])
+        let schema = Schema([Identity.self, HabitAction.self, Scrapbook.self, Vote.self, TextEntry.self, PhotoEntry.self])
         let configuration = ModelConfiguration(
             schema: schema, isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none
         )
